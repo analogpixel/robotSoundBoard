@@ -4,6 +4,8 @@ import ConfigParser
 import os
 import sys
 import RPi.GPIO as GPIO
+import time
+
 
 # array that holds sound file names, and what pins they are attached to (loaded from config)
 sounds = []
@@ -23,13 +25,23 @@ def flashCorrect(correctSound):
 
 # wait is a bool 1 wait for sound to finish 0 don't wait
 def play(sound,wait):
-  system("%s wav/%s" % (aplay, sound)
+  os.system("%s './wav/%s'" % (aplay, sound))
 
-def setPins(pinConfig):
+def pinSetup(pinConfig):
+  GPIO.cleanup()
+  GPIO.setmode(GPIO.BCM)
+
   for pin in pinConfig:
-    GPIO.setup( pin['in'], GPIO.in, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect( pin['in'], GPIO.RISING)
+    GPIO.setup( pin['in'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.add_event_detect( pin['in'], GPIO.FALLING) # , bouncetime=1000)
 
+# poll until you get something
+def getInput(pinConfig):
+  while True:
+    for pin in pinConfig:
+      #if GPIO.event_detected( int( pin['in'] ) ):
+      if not GPIO.input(int( pin['in'] ) ):
+        return int(pin['id'])
 
 if __name__ == '__main__':
   config = ConfigParser.SafeConfigParser()
@@ -41,7 +53,7 @@ if __name__ == '__main__':
       sounds.append( eval( config.get('sounds', sound)))
 
     # configure each pin
-    setPins(sounds)
+    pinSetup(sounds)
 
     aplay   = config.get('config', 'pathToAplay')
     correct = config.get('config', 'correctSound')
@@ -49,14 +61,19 @@ if __name__ == '__main__':
     calc    = config.get('config', 'calculatingSound')
 
     # main game loop
-    while true:
-      play(sounds[activeSound])
-      i = getInput(aplay)
-      if i == activeSound:
-        flashCorrect(correct)
-        flashPickNew(calc)
-        activeSound = activeSound + 1
-        if activeSound > len(sounds):
-          activeSound = 0
-      else:
-        flashWrong(wrong)
+    while True:
+      for sound in sounds:
+        match=False
+        print sound
+        while not match:
+          play(sound['sound'],1)
+          i = getInput(sounds)
+          if i == sound['id']:
+            flashCorrect(correct)
+            flashPickNew(calc)
+            match=True
+          else:
+            match=False
+            flashWrong(wrong)
+            #GPIO.cleanup()
+            #sys.exit()
