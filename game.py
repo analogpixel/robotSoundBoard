@@ -27,10 +27,10 @@ def flashPickNew(calcSound):
     lamp_set(i,0)
 
 def flashWrong(wrongSound):
-  play(wrongSound,0)
+  play(wrongSound,1)
 
 def flashCorrect(correctSound):
-  play(correctSound,0)
+  play(correctSound,1)
 
 # wait is a bool 1 wait for sound to finish 0 don't wait
 def play(sound,wait):

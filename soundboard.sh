@@ -18,7 +18,7 @@ start() {
 	echo -n $"Starting $prog:"
 	cd /root/robotSoundBoard
 	/usr/bin/python game.py &
-  PID=$!
+        PID=$!
 	RETVAL=$?
 	echo $PID >  /var/run/soundboard.pid
 	echo
@@ -26,8 +26,10 @@ start() {
 
 stop() {
 	echo -n $"Stopping $prog:"
+	if [ -f /var/run/soundboard.pid ] ; then
 	kill -9 `cat /var/run/soundboard.pid`
-	rm /var/run.soundboard.pid
+	rm /var/run/soundboard.pid
+        fi
 	echo
 }
 
